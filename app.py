@@ -2,16 +2,65 @@
 import logging
 import uuid
 import os
+import MySQLdb
+import subprocess
+import torndb
 
 import tornado
 from tornado.concurrent import Future
 from tornado import gen
 from tornado.web import RequestHandler
-from tornado.options import define,options,parse_command_line
+from tornado.options import define
+from tornado.options import options
+from tornado.options import parse_command_line
 
 define("port",default=8000,help="run port",type=int)
 define("debug",default=True,help="develop mode")
+define("mysql_host",default="localhost",help="database host")
+define("mysql_database",default="chatroom",help="database name")
+define("mysql_user",default="root",help="database user")
+define("mysql_password",default="",help="password")
 
+class Application(tornado.web.Application):
+
+    def __init__(self):
+
+        handlers = [
+            (r"/",MainHandler),
+            (r"/message/new",MessageNewHandler),
+            (r"/message/update",MessageUpdatesHandler)
+        ]
+
+        settings = dict(
+            template_path = os.path.join(os.path.dirname(__file__),"templates"),
+            static_path = os.path.join(os.path.dirname(__file__),"static"),
+            cookie_secret = "__TODO:_GENERATE_YOUR_OWN_RANDOM_VALUE_HERE__",
+            ui_modules = {"Message":MessageModule},
+            xsrf_cookies = True,
+            debug = options.debug, 
+        )
+
+        super(Application, self).__init__(handlers,**settings)
+
+        self.db = torndb.Connection(
+            host = options.mysql_host, database = options.mysql_database,
+            user = options.mysql_user, password = options.mysql_password,
+        )
+    
+        self.create_databse_if_not_exsit()
+
+    def create_databse_if_not_exsit(self):
+        try:
+            self.db.get("select COUNT(*) from messages")
+        except MySQLdb.ProgrammingError:
+            subprocess.check_call(['mysql',
+                       '--host=' + options.mysql_host,
+                       '--database=' + options.mysql_database,
+                       '--user=' + options.mysql_user,
+                       '--password=' + options.mysql_password],
+                      stdin=open('chatroom.sql'))
+
+        
 
 
 class MessageBuffer(object):
@@ -98,19 +147,7 @@ class MessageModule(tornado.web.UIModule):
 
 def main():
     parse_command_line()
-    app = tornado.web.Application(
-            [
-                (r"/",MainHandler),
-                (r"/message/new",MessageNewHandler),
-                (r"/message/update",MessageUpdatesHandler)
-            ],
-            cookie_secret = "__TODO:_GENERATE_YOUR_OWN_RANDOM_VALUE_HERE__",
-            template_path = os.path.join(os.path.dirname(__file__),"templates"),
-            static_path = os.path.join(os.path.dirname(__file__),"static"),
-            ui_modules = {"Message":MessageModule},
-            xsrf_cookies = True,
-            debug = options.debug, 
-        )
+    app = Application()
     app.listen(options.port)
     tornado.ioloop.IOLoop.current().start()
 
