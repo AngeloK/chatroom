@@ -13,10 +13,6 @@ define("port",default=8000,help="run port",type=int)
 define("debug",default=True,help="develop mode")
 
 
-class MainHandler(RequestHandler):
-
-    def get(self):
-        return self.render("index.html")
 
 class MessageBuffer(object):
 
@@ -32,7 +28,8 @@ class MessageBuffer(object):
             future.set_result(message)
 
         self.waiters = set()
-        self.cache.extend([ message ])
+        self.cache.extend(message)
+        logging.info("### message in cache: %s",self.cache)
         if len(self.cache)>self.cache_size:
             self.cache = self.cache[-self.cache_size:]
 
@@ -45,9 +42,10 @@ class MessageBuffer(object):
 
 
     def wait_for_messages(self,cursor=None):
-        
+        '''
+        cursor used for mark the id of the newest message.
+        '''
         result_future = Future()
-
         if not cursor:
             logging.info("new listner joined")
             self.waiters.add(result_future)
@@ -58,28 +56,44 @@ class MessageBuffer(object):
                 if msg['id'] == cursor:
                     break
                 new_count = new_count+1
+            if new_count:
                 result_future.set_result(self.cache[-new_count:])
-                return 
+            self.waiters.add(result_future)
+            return result_future 
 
 global_message_buffer = MessageBuffer()
         
+class MainHandler(RequestHandler):
+
+    def get(self):
+        return self.render("index.html",messages=global_message_buffer.cache)
+
 class MessageNewHandler(RequestHandler):
 
     def post(self):
-        id_ = uuid.uuid4()
+        id_ = str(uuid.uuid4())
         body = self.get_argument("body")
-        message = dict(cursor=id_,body=body) 
-        global_message_buffer.new_message(message)
+        message = dict(id=id_,body=body) 
+        self.write(message)
+        global_message_buffer.new_message([message])
+        logging.info("new message created,message:%s" %message)
 
 class MessageUpdatesHandler(RequestHandler):
     @gen.coroutine
     def post(self):
-        cursor = get_argument("cursor",None)
+        cursor = self.get_argument("cursor",None)
         self.future = global_message_buffer.wait_for_messages(cursor=cursor)
+        logging.info("+++ self.future: %s"%self.future)
         messages = yield self.future
-        if self.request.connection.start.closed():
+        logging.info("+++++ Yield Messages: %s" %messages)
+        if self.request.connection.stream.closed():
             return
         self.write(dict(messages=messages))
+
+class MessageModule(tornado.web.UIModule):
+
+    def render(self,message):
+        return self.render_string("message.html",message=message)
 
 
 def main():
@@ -93,6 +107,7 @@ def main():
             cookie_secret = "__TODO:_GENERATE_YOUR_OWN_RANDOM_VALUE_HERE__",
             template_path = os.path.join(os.path.dirname(__file__),"templates"),
             static_path = os.path.join(os.path.dirname(__file__),"static"),
+            ui_modules = {"Message":MessageModule},
             xsrf_cookies = True,
             debug = options.debug, 
         )

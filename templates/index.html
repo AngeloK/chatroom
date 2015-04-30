@@ -1,15 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Room Chat</title>
-</head>
-<body>
-    <form action="message/new">
-        <input type="text" name="body">
-        <input type="submit" value="Post">
-    </form>    
-    <script src="static/jquery/dist/jquery.min.js"></script>
-    <script src="static/chat.js"></script>
-</body>
+    <head>
+        <meta charset="UTF-8">
+        <title>Room Chat</title>
+        <link rel="stylesheet" href="static/chat.css" type="text/css"/>
+    </head>
+    <body>
+        <div class="messageBox">
+            {% for message in messages %}
+                {% module Message(message) %}
+            {% end %}
+        </div>
+        <div class="container">
+            <form id="messageForm" action="message/new">
+                <input type="text" name="body" id="message">
+                <input type="submit" value="发送">
+                {% module xsrf_form_html() %}
+            </form>    
+        </div>
+        <script src="static/jquery/dist/jquery.min.js"></script>
+        <script src="static/jquery.cookie/jquery.cookie.js"></script>
+        <script src="static/chat.js"></script>
+    </body>
 </html>
