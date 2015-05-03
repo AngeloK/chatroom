@@ -5,6 +5,7 @@ import os
 import MySQLdb
 import subprocess
 import torndb
+import bcrypt
 
 import tornado
 from tornado.concurrent import Future
@@ -28,12 +29,13 @@ class Application(tornado.web.Application):
         handlers = [
             (r"/",MainHandler),
             (r"/message/new",MessageNewHandler),
-            (r"/message/update",MessageUpdatesHandler)
+            (r"/message/update",MessageUpdatesHandler),
+            (r"/users/new",UserHandler)
         ]
 
         settings = dict(
-            template_path = os.path.join(os.path.dirname(__file__),"templates"),
-            static_path = os.path.join(os.path.dirname(__file__),"static"),
+            template_path=os.path.join(os.path.dirname(__file__), "templates"),
+            static_path=os.path.join(os.path.dirname(__file__), "static"),
             cookie_secret = "__TODO:_GENERATE_YOUR_OWN_RANDOM_VALUE_HERE__",
             ui_modules = {"Message":MessageModule},
             xsrf_cookies = True,
@@ -59,9 +61,6 @@ class Application(tornado.web.Application):
                        '--user=' + options.mysql_user,
                        '--password=' + options.mysql_password],
                       stdin=open('chatroom.sql'))
-
-        
-
 
 class MessageBuffer(object):
 
@@ -117,6 +116,24 @@ class MainHandler(RequestHandler):
     def get(self):
         return self.render("index.html",messages=global_message_buffer.cache)
 
+class BaseHandler(RequestHandler):
+    
+    @property
+    def db(self):
+        return self.application.db
+
+    #def get_current_user(self):
+        #user_id = get_secure_cookie("user")
+        #return None if not user_id
+
+    def check_if_exist(self,email):
+        user = self.db.get("SELECT * FROM users WHERE email=%s",email)
+        if user:
+            return True
+        return False
+
+
+
 class MessageNewHandler(RequestHandler):
 
     def post(self):
@@ -134,7 +151,6 @@ class MessageUpdatesHandler(RequestHandler):
         self.future = global_message_buffer.wait_for_messages(cursor=cursor)
         logging.info("+++ self.future: %s"%self.future)
         messages = yield self.future
-        logging.info("+++++ Yield Messages: %s" %messages)
         if self.request.connection.stream.closed():
             return
         self.write(dict(messages=messages))
@@ -144,6 +160,28 @@ class MessageModule(tornado.web.UIModule):
     def render(self,message):
         return self.render_string("message.html",message=message)
 
+class UserHandler(BaseHandler):
+
+    def get(self):
+        return self.render("create_user.html") 
+
+    def post(self):
+        email = self.get_argument("email")
+        if self.check_if_exist(email):
+            raise tornado.web.HTTPError(400,"User existed!")
+        else:
+            password = bcrypt.hashpw(self.get_argument("password"),
+                    bcrypt.gensalt()) 
+
+            user_id = self.db.execute(
+                "INSERT INTO users ('name','email','password')"
+                "VALUES (%s,%s,%s)",
+                self.get_argument("name"),self.get_argument("email"),
+                password) 
+
+            self.set_cookie("chat_user",user_id)
+            self.redirect(self.get_argument("next"),"/")
+            
 
 def main():
     parse_command_line()
