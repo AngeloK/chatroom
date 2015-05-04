@@ -3,18 +3,25 @@
     <h1>{{ _('Sign up') }}</h1>
     <form class="form" id="createUserForm" action="/new" method="POST">
         {% module xsrf_form_html() %}
-        <span class="helpMessage hidden" id="emailHelp">please input email
-            address correctly!</span>
-        <span class="helpMessage hidden" id="nameHelp">Invalid name</span>
-        <span class="helpMessage hidden" id="passwordHelp">Invalid password
-            </span>
+        <ul>
+        <li>
+            <span class="helpMessage hidden" id="emailHelp">please input email
+                address correctly!</span>
+        </li>
+        <li>
+            <span class="helpMessage hidden" id="nameHelp">Invalid name</span>
+        </li>
+        <li>
+            <span class="helpMessage hidden" id="passwordHelp">Invalid password
+                </span>
+        </li>
+        </ul>
         <input id="newName" type="text" name="name"
             placeholder="{{ _('Name') }}" >
         <input id="newEmail" type="text" name="email" 
             placeholder="{{ _('Email') }}" >
         <input id="newPassword" type="password" name="password"
             placeholder="{{ _('Password') }}" >
-        <input type="hidden" value="/">
         <button type="submit" id="create-button">
             {{ _('Sign up') }}</button>
     </form>  

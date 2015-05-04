@@ -3,13 +3,20 @@
     <h1>{{ _('Welcome') }}</h1>
     <form class="form" id="loginForm" action="/login" method="post">
         {% module xsrf_form_html() %}
-        <span class="helpMessage hidden" id="loginEmailHelp">please input email
-            address correctly!</span>
+        <ul>
+        <li>
+            <span class="helpMessage hidden" id="emailHelp">please input email
+                address correctly!</span>
+        </li>
+        <li>
+            <span class="helpMessage hidden" id="passwordHelp">Invalid password
+                </span>
+        </li>
+        </ul>
         <input type="text" placeholder="{{ _('Email') }}" 
-            name="email" id="loginEmail" onkeyup="checkEmail()">
+            name="email" id="loginEmail" >
         <input type="password" placeholder="{{ _('Password') }}" 
             name="password" id="loginPassword">
-        <input type="hidden" name="/">
         <button type="submit" id="login-button">
             {{ _('Login') }}</button>
     </form>
