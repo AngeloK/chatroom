@@ -9,6 +9,7 @@ import torndb
 import bcrypt
 
 import tornado
+import concurrent.futures
 from tornado.concurrent import Future
 from tornado import gen
 from tornado.web import RequestHandler
@@ -23,7 +24,7 @@ define("mysql_database",default="chatroom",help="database name")
 define("mysql_user",default="root",help="database user")
 define("mysql_password",default="",help="password")
 
-#executor = concurrent.futures.ThreadPoolExecutor(2)
+executor = concurrent.futures.ThreadPoolExecutor(2)
 
 
 class Application(tornado.web.Application):
@@ -174,15 +175,16 @@ class UserCreateHandler(BaseHandler):
     def get(self):
         return self.render("create_user.html") 
 
+    @gen.coroutine
     def post(self):
         email = self.get_argument("email")
         print(email)
         if self.check_if_exist(email):
             raise tornado.web.HTTPError(400,"User existed!")
         else:
-            encode_pw = self.get_argument("password").encode("utf-8")
-            encode_salt = bcrypt.gensalt().encode("utf-8")
-            password = bcrypt.hashpw(encode_pw,encode_salt) 
+            password = yield executor.submit(
+                bcrypt.hashpw, tornado.escape.utf8(self.get_argument("password")),
+                bcrypt.gensalt())
 
             user_id = self.db.execute(
                 "INSERT INTO users (`name`,`email`,`password`) "
@@ -191,13 +193,16 @@ class UserCreateHandler(BaseHandler):
                 password) 
 
             self.set_cookie("chat_user",str(user_id))
-            self.redirect(self.get_argument("next"),"/")
+            logging.info("Cookie:"+str(user_id))
+            logging.info("going to index.html")
+            self.write("redirect")
             
 class UserAuthenticateHandler(BaseHandler):
 
     def get(self):
         return self.render("login.html")
 
+    @gen.coroutine
     def post(self):
         email = self.get_argument("email")
 

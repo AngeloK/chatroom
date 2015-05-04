@@ -19,10 +19,12 @@ $("#create-button").click(function(event){
     var formData = $form.form2Dic();
     $.postForm("/new",formData,function(response){
 
-        $form.fadeOut(500);
-        $('.wrapper').addClass('form-success');
-        
-    })
+        if ( response == "redirect"){
+            $form.fadeOut(500);
+            $('.wrapper').addClass('form-success');
+            window.setTimeout(window.location.href="/",500); 
+        }
+    });
 });
 
 jQuery.postForm = function(url,formData,callback){
@@ -33,7 +35,7 @@ jQuery.postForm = function(url,formData,callback){
         data:$.param(formData),
         success:function(response){
             if(callback){
-                callback(eval("("+response+")"));
+                callback(response);
             }
         },
         error:function(error){
