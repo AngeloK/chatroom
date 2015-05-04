@@ -1,15 +1,21 @@
 {% extends "userBase.html" %}
 {% block content %}
     <h1>{{ _('Sign up') }}</h1>
-    <form class="form" action="/users/new" method="POST">
-        <input id="loginName" type="password" name="name"
-            placeholder="{{ _('Name') }}">
-        <input id="loginEmail" type="text" name="email" 
-            placeholder="{{ _('Email') }}">
-        <input id="loginPassword" type="password" name="password"
-            placeholder="{{ _('Password') }}">
+    <form class="form" id="createUserForm" action="/new" method="POST">
+        {% module xsrf_form_html() %}
+        <span class="helpMessage hidden" id="emailHelp">please input email
+            address correctly!</span>
+        <span class="helpMessage hidden" id="nameHelp">Invalid name</span>
+        <span class="helpMessage hidden" id="passwordHelp">Invalid password
+            </span>
+        <input id="newName" type="text" name="name"
+            placeholder="{{ _('Name') }}" onkeyup="checkName()">
+        <input id="newEmail" type="text" name="email" 
+            placeholder="{{ _('Email') }}" onkeyup="checkEmail()">
+        <input id="newPassword" type="password" name="password"
+            placeholder="{{ _('Password') }}" >
         <input type="hidden" value="/">
-        <button type="submit" id="login-button">
+        <button type="submit" id="create-button">
             {{ _('Sign up') }}</button>
     </form>  
 {% end %}

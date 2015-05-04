@@ -23,4 +23,12 @@
     margin-left: 100px;
 }
 
+.helpMessage {
+    color:red;
+    font-size:12px;
+    font-family:inherit;
+}
 
+.hidden {
+    display:none;
+}

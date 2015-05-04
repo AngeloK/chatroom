@@ -1,11 +1,14 @@
 {% extends "userBase.html" %}
 {% block content %}
     <h1>{{ _('Welcome') }}</h1>
-    <form class="form" action="/login" method="post">
+    <form class="form" id="loginForm" action="/login" method="post">
+        {% module xsrf_form_html() %}
+        <span class="helpMessage hidden" id="loginEmailHelp">please input email
+            address correctly!</span>
         <input type="text" placeholder="{{ _('Email') }}" 
-            name="email">
+            name="email" id="loginEmail" onkeyup="checkEmail()">
         <input type="password" placeholder="{{ _('Password') }}" 
-            name="password">
+            name="password" id="loginPassword">
         <input type="hidden" name="/">
         <button type="submit" id="login-button">
             {{ _('Login') }}</button>

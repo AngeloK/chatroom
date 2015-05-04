@@ -1,3 +1,4 @@
+# -*- coding:utf-8 -*-
 
 import logging
 import uuid
@@ -33,7 +34,7 @@ class Application(tornado.web.Application):
             (r"/",MainHandler),
             (r"/message/new",MessageNewHandler),
             (r"/message/update",MessageUpdatesHandler),
-            (r"/new",UserHandler),
+            (r"/new",UserCreateHandler),
             (r"/login",UserAuthenticateHandler)
         ]
 
@@ -168,26 +169,28 @@ class MessageModule(tornado.web.UIModule):
     def render(self,message):
         return self.render_string("message.html",message=message)
 
-class UserHandler(BaseHandler):
+class UserCreateHandler(BaseHandler):
 
     def get(self):
         return self.render("create_user.html") 
 
     def post(self):
         email = self.get_argument("email")
+        print(email)
         if self.check_if_exist(email):
             raise tornado.web.HTTPError(400,"User existed!")
         else:
-            password = bcrypt.hashpw(self.get_argument("password"),
-                    bcrypt.gensalt()) 
+            encode_pw = self.get_argument("password").encode("utf-8")
+            encode_salt = bcrypt.gensalt().encode("utf-8")
+            password = bcrypt.hashpw(encode_pw,encode_salt) 
 
             user_id = self.db.execute(
-                "INSERT INTO users ('name','email','password')"
+                "INSERT INTO users (`name`,`email`,`password`) "
                 "VALUES (%s,%s,%s)",
                 self.get_argument("name"),self.get_argument("email"),
                 password) 
 
-            self.set_cookie("chat_user",user_id)
+            self.set_cookie("chat_user",str(user_id))
             self.redirect(self.get_argument("next"),"/")
             
 class UserAuthenticateHandler(BaseHandler):
@@ -206,7 +209,7 @@ class UserAuthenticateHandler(BaseHandler):
         
         if bcrypt.hashpw(password,hashed_password) == hashed_password:
             user_id = self.db.get("SELECT id from users where email=%s",email)
-            self.set_cookie("chat_user",user_id)
+            self.set_cookie("chat_user",str(user_id))
             self.redirect(self.get_argument("next","/"))
 
 def main():
