@@ -1,0 +1,13 @@
+{% extends "userBase.html" %}
+{% block content %}
+    <h1>{{ _('Welcome') }}</h1>
+    <form class="form" action="/login" method="post">
+        <input type="text" placeholder="{{ _('Email') }}" 
+            name="email">
+        <input type="password" placeholder="{{ _('Password') }}" 
+            name="password">
+        <input type="hidden" name="/">
+        <button type="submit" id="login-button">
+            {{ _('Login') }}</button>
+    </form>
+{% end %}
