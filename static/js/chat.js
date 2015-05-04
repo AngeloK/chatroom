@@ -19,6 +19,10 @@ $(document).ready(function(){
         }
     });
 
+    cookieValue = $.cookie("chat_user");
+
+    if (cookieValue) console.log(cookieValue);
+
     //focus on input area
     $("#message").select();
 

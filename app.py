@@ -176,7 +176,6 @@ class UserCreateHandler(BaseHandler):
 
     def post(self):
         email = self.get_argument("email")
-        print(email)
         if self.check_if_exist(email):
             raise tornado.web.HTTPError(400,"User existed!")
         else:
@@ -190,8 +189,7 @@ class UserCreateHandler(BaseHandler):
                 self.get_argument("name"),self.get_argument("email"),
                 password) 
 
-            self.set_cookie("chat_user",str(user_id))
-            self.redirect(self.get_argument("next"),"/")
+            self.set_secure_cookie("chat_user",str(user_id))
             
 class UserAuthenticateHandler(BaseHandler):
 
@@ -209,8 +207,7 @@ class UserAuthenticateHandler(BaseHandler):
         
         if bcrypt.hashpw(password,hashed_password) == hashed_password:
             user_id = self.db.get("SELECT id from users where email=%s",email)
-            self.set_cookie("chat_user",str(user_id))
-            self.redirect(self.get_argument("next","/"))
+            self.set_secure_cookie("chat_user",str(user_id))
 
 def main():
     parse_command_line()

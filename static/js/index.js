@@ -1,40 +1,61 @@
  $("#login-button").click(function(event){
     event.preventDefault();
     
-    //var formData = $("#loginForm").serialize();
     var $form = $("#loginForm");
-    var formData = $form.form2Dic();
-
-    $.postForm("/login",formData,function(response){
-
-        $form.fadeOut(500);
-        $('.wrapper').addClass('form-success');
-    })
+    $form.fadeOut(500);
+    $('.wrapper').addClass('form-success');
+    var formData = $form.serialize();
+    $.postForm("/login",formData);
 });
 
 $("#create-button").click(function(event){
     event.preventDefault();
 
     var $form = $("#createUserForm");
-    var formData = $form.form2Dic();
-    $.postForm("/new",formData,function(response){
-
-        $form.fadeOut(500);
-        $('.wrapper').addClass('form-success');
-        
-    })
+    $form.fadeOut(500);
+    $('.wrapper').addClass('form-success');
+    var formData = $form.serialize();
+    $.postForm("/new",formData)
 });
 
-jQuery.postForm = function(url,formData,callback){
+$("input[name=email]").blur(function(){
+    $this = $(this);
+    if (!validateForm.validateEmail($this.val())) {
+        $("#emailHelp").removeClass("hidden"); 
+    }
+    else {
+        $("#emailHelp").addClass("hidden"); 
+    };
+});
+
+$("input[name=name]").blur(function(){
+    $this = $(this);
+    if (!validateForm.validateName($this.val())) {
+        $("#nameHelp").removeClass("hidden");
+    }
+    else{
+        $("#nameHelp").addClass("hidden");
+    }
+});
+
+$("input[name=password]").blur(function(){
+    $this = $(this);
+    if (!validateForm.validatePassword($this.val())) {
+        $("#passwordHelp").removeClass("hidden");
+    }
+    else {
+        $("#passwordHelp").addClass("hidden");
+    }
+});
+
+jQuery.postForm = function(url,formData){
     $.ajax({
         type:"POST",
         url:url,
         dataType:"text",
-        data:$.param(formData),
+        data:formData,
         success:function(response){
-            if(callback){
-                callback(eval("("+response+")"));
-            }
+            window.location.href="/";
         },
         error:function(error){
             console.log("Error:",error);
@@ -42,15 +63,15 @@ jQuery.postForm = function(url,formData,callback){
     });
 };
 
-jQuery.fn.form2Dic = function(){
-    var fields = this.serializeArray();
-    var json={};
-    for (var i=0;i<fields.length;i++){
-        json[fields[i].name] = fields[i].value;
-    }
-    if(json.next) delete json.next;
-    return json;
-}
+//jQuery.fn.form2Dic = function(){
+    //var fields = this.serializeArray();
+    //var json={};
+    //for (var i=0;i<fields.length;i++){
+        //json[fields[i].name] = fields[i].value;
+    //}
+    //if(json.next) delete json.next;
+    //return json;
+//}
 
 //check if email is corrected while typing email address.
 function checkEmail(){
