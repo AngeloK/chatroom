@@ -22,6 +22,9 @@ define("mysql_database",default="chatroom",help="database name")
 define("mysql_user",default="root",help="database user")
 define("mysql_password",default="",help="password")
 
+#executor = concurrent.futures.ThreadPoolExecutor(2)
+
+
 class Application(tornado.web.Application):
 
     def __init__(self):
@@ -30,7 +33,8 @@ class Application(tornado.web.Application):
             (r"/",MainHandler),
             (r"/message/new",MessageNewHandler),
             (r"/message/update",MessageUpdatesHandler),
-            (r"/users/new",UserHandler)
+            (r"/new",UserHandler),
+            (r"/login",UserAuthenticateHandler)
         ]
 
         settings = dict(
@@ -132,6 +136,10 @@ class BaseHandler(RequestHandler):
             return True
         return False
 
+    def get_password(self,email):
+
+        return self.db.get("SELECT password FROM users where email=%s",email)
+
 
 
 class MessageNewHandler(RequestHandler):
@@ -182,6 +190,24 @@ class UserHandler(BaseHandler):
             self.set_cookie("chat_user",user_id)
             self.redirect(self.get_argument("next"),"/")
             
+class UserAuthenticateHandler(BaseHandler):
+
+    def get(self):
+        return self.render("login.html")
+
+    def post(self):
+        email = self.get_argument("email")
+
+        if not self.check_if_exist(email):
+            raise tornado.web.HTTPError(400,"authenticate fail")
+
+        password = self.get_argument("password")
+        hashed_password = self.get_password(email)
+        
+        if bcrypt.hashpw(password,hashed_password) == hashed_password:
+            user_id = self.db.get("SELECT id from users where email=%s",email)
+            self.set_cookie("chat_user",user_id)
+            self.redirect(self.get_argument("next","/"))
 
 def main():
     parse_command_line()
