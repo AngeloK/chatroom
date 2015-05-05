@@ -45,7 +45,6 @@ $("input[name=email]").blur(function(){
     };
 });
 
-<<<<<<< HEAD
 $("input[name=name]").blur(function(){
     $this = $(this);
     if (!validateForm.validateName($this.val()) || $this.val()=="") {

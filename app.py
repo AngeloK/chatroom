@@ -36,7 +36,8 @@ class Application(tornado.web.Application):
             (r"/message/new",MessageNewHandler),
             (r"/message/update",MessageUpdatesHandler),
             (r"/new",UserCreateHandler),
-            (r"/login",UserAuthenticateHandler)
+            (r"/login",UserAuthenticateHandler),
+            (r"/logout",UserLogoutHandler)
         ]
 
         settings = dict(
@@ -204,8 +205,9 @@ class UserAuthenticateHandler(BaseHandler):
 
     def get(self):
         user = self.get_current_user()
+        logging.info("current user is: ",user.id)
         if user:
-            self.render("index.html")
+            self.render("index.html",messages=global_message_buffer.cache)
             return
         self.render("login.html")
         return 
@@ -228,17 +230,15 @@ class UserAuthenticateHandler(BaseHandler):
             self.set_secure_cookie("chat_user",str(user.id))
         else:
             raise tornado.web.HTTPError(400,"wrong password")
-        
 
+class UserLogoutHandler(BaseHandler):
 
-
-        password = yield executor.submit(self.get_argument("password"))
-        if not hashed_password:
-            raise tornado.web.HTTPError(400,"authenticate failed!")
-        if bcrypt.hashpw(password,hashed_password) == hashed_password:
-            res = self.db.get("SELECT id from users where email=%s",email)
-            self.set_secure_cookie("chat_user",str(res.get("id")))
-
+    def get(self):
+        if self.get_secure_cookie("chat_user"):
+            self.clear_cookie("chat_user")
+        else:
+            pass
+        self.redirect("/")
 
 def main():
     parse_command_line()

@@ -115,6 +115,15 @@ form button {
 form button:hover {
   background-color: #f5f7f9;
 }
+
+.hidden {
+    display:none;
+}
+
+form ul {
+    list-style:none;
+}
+
 .bg-bubbles {
   position: absolute;
   top: 0;
