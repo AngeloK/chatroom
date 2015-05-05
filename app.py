@@ -180,6 +180,9 @@ class MessageModule(tornado.web.UIModule):
 class UserCreateHandler(BaseHandler):
 
     def get(self):
+        if self.get_current_user():
+            self.redirect("/")
+            return
         return self.render("create_user.html") 
 
     @gen.coroutine
@@ -205,12 +208,9 @@ class UserAuthenticateHandler(BaseHandler):
 
     def get(self):
         user = self.get_current_user()
-        logging.info("current user is: ",user.id)
         if user:
-            self.render("index.html",messages=global_message_buffer.cache)
-            return
+            self.redirect("/")
         self.render("login.html")
-        return 
 
     @gen.coroutine
     def post(self):
@@ -219,7 +219,7 @@ class UserAuthenticateHandler(BaseHandler):
         if not self.check_if_exist(email):
             raise tornado.web.HTTPError(400,"authenticate fail,no user founded")
 
-        user = self.db.get("SELECT password FROM users WHERE email=%s",
+        user = self.db.get("SELECT * FROM users WHERE email=%s",
                 email)
         
         hashed_password = yield executor.submit(

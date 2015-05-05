@@ -3,9 +3,6 @@
 $(document).ready(function(){
     // post message if user click "submit"
 
-    if $.cookie("chat_user") {
-        console.log("chat_user:",$.cookie("chat_user"));
-    }
     $("#messageForm").on("submit",function(){
         $this = $(this);
         var formData = $this.serialize(); 

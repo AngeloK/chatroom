@@ -1,11 +1,18 @@
  $("#login-button").click(function(event){
     event.preventDefault();
     
-    var $form = $("#loginForm");
-    $form.fadeOut(500);
-    $('.wrapper').addClass('form-success');
-    var formData = $form.serialize();
-    $.postForm("/login",formData);
+    if ($("input[name=email]").val == "" || $("input[name=name]").val()=="" ||
+        $("input[name=password]").val()==""){
+        $("#create-button").disable(true);
+    }
+    else{
+        $("#create-button").disable(false);
+        var $form = $("#loginForm");
+        $form.fadeOut(500);
+        $('.wrapper').addClass('form-success');
+        var formData = $form.serialize();
+        $.postForm("/login",formData);
+    }
 });
 
 $("#create-button").click(function(event){
