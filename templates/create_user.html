@@ -1,6 +1,7 @@
 {% extends "userBase.html" %}
+{% block title %}Sign up{% end %}
 {% block content %}
-    <h1>{{ _('Sign up') }}</h1>
+    <h1>{{ _('Welcome') }}</h1>
     <form class="form" id="createUserForm" action="/new" method="POST">
         {% module xsrf_form_html() %}
         <ul>

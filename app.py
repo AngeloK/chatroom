@@ -177,19 +177,18 @@ class UserCreateHandler(BaseHandler):
     def post(self):
         email = self.get_argument("email")
         if self.check_if_exist(email):
-            raise tornado.web.HTTPError(400,"User existed!")
-        else:
-            encode_pw = self.get_argument("password").encode("utf-8")
-            encode_salt = bcrypt.gensalt().encode("utf-8")
-            password = bcrypt.hashpw(encode_pw,encode_salt) 
+            raise tornado.web.HTTPError(4001,"User existed!")
+        encode_pw = self.get_argument("password").encode("utf-8")
+        encode_salt = bcrypt.gensalt().encode("utf-8")
+        password = bcrypt.hashpw(encode_pw,encode_salt) 
 
-            user_id = self.db.execute(
-                "INSERT INTO users (`name`,`email`,`password`) "
-                "VALUES (%s,%s,%s)",
-                self.get_argument("name"),self.get_argument("email"),
-                password) 
+        user_id = self.db.execute(
+            "INSERT INTO users (`name`,`email`,`password`) "
+            "VALUES (%s,%s,%s)",
+            self.get_argument("name"),self.get_argument("email"),
+            password) 
 
-            self.set_secure_cookie("chat_user",str(user_id))
+        self.set_secure_cookie("chat_user",str(user_id))
             
 class UserAuthenticateHandler(BaseHandler):
 
@@ -202,12 +201,15 @@ class UserAuthenticateHandler(BaseHandler):
         if not self.check_if_exist(email):
             raise tornado.web.HTTPError(400,"authenticate fail")
 
-        password = self.get_argument("password")
+        password = self.get_argument("password").encode("utf-8")
         hashed_password = self.get_password(email)
-        
+        logging.info("hashed_password:",hashed_password)
+        if not hashed_password:
+            raise tornado.web.HTTPError(400,"authenticate failed!")
         if bcrypt.hashpw(password,hashed_password) == hashed_password:
             user_id = self.db.get("SELECT id from users where email=%s",email)
             self.set_secure_cookie("chat_user",str(user_id))
+
 
 def main():
     parse_command_line()

@@ -10,41 +10,63 @@
 
 $("#create-button").click(function(event){
     event.preventDefault();
+    
+    if ($("input[name=email]").val == "" || $("input[name=name]").val()=="" ||
+        $("input[name=password]").val()==""){
+        $("#create-button").disable(true);
+    }
+    else{
+        $("#create-button").disable(false);
+        var $form = $("#createUserForm");
+        $form.fadeOut(500);
+        $('.wrapper').addClass('form-success');
+        var formData = $form.serialize();
+        $.postForm("/new",formData)
+    }
+});
 
-    var $form = $("#createUserForm");
-    $form.fadeOut(500);
-    $('.wrapper').addClass('form-success');
-    var formData = $form.serialize();
-    $.postForm("/new",formData)
+jQuery.fn.extend({
+    disable: function(state) {
+        return this.each(function() {
+            this.disabled = state;
+        });
+    }
 });
 
 $("input[name=email]").blur(function(){
     $this = $(this);
-    if (!validateForm.validateEmail($this.val())) {
+    if (!validateForm.validateEmail($this.val()) || $this.val()=="") {
         $("#emailHelp").removeClass("hidden"); 
+        $("#create-button").disable(true);
     }
     else {
         $("#emailHelp").addClass("hidden"); 
+        $("#create-button").disable(false);
     };
 });
 
 $("input[name=name]").blur(function(){
     $this = $(this);
-    if (!validateForm.validateName($this.val())) {
+    if (!validateForm.validateName($this.val()) || $this.val()=="") {
         $("#nameHelp").removeClass("hidden");
+        $("#create-button").disable(true);
     }
+    
     else{
         $("#nameHelp").addClass("hidden");
+        $("#create-button").disable(false);
     }
 });
 
 $("input[name=password]").blur(function(){
     $this = $(this);
-    if (!validateForm.validatePassword($this.val())) {
+    if (!validateForm.validatePassword($this.val()) || $this.val()=="") {
         $("#passwordHelp").removeClass("hidden");
+        $("#create-button").disable(true);
     }
     else {
         $("#passwordHelp").addClass("hidden");
+        $("#create-button").disable(false);
     }
 });
 
@@ -73,32 +95,6 @@ jQuery.postForm = function(url,formData){
     //return json;
 //}
 
-//check if email is corrected while typing email address.
-function checkEmail(){
-    $("#emailHelp").addClass("hidden"); 
-    var $email = $("input[name=email]");
-
-    if ( $email.val()=="" || 
-        !validateForm.validateEmail($email.val())){
-        $("#emailHelp").removeClass("hidden"); 
-    }
-    else{
-        $("#emailHelp").addClass("hidden"); 
-    }
-}
-
-function checkName(){
-    $("#nameHelp").addClass("hidden"); 
-    var $newName = $("#newName");
-
-    if ( $newName.val()=="" || 
-        !validateForm.validateName($newName.val())){
-        $("#nameHelp").removeClass("hidden"); 
-    }
-    else{
-        $("#nameHelp").addClass("hidden"); 
-    }
-}
 
 //obejct for validating form value.
 var validateForm = {
@@ -113,6 +109,7 @@ var validateForm = {
     },
 
     validatePassword:function(password){
-        var re = /^(?=.*\d)(?=.*[A-Z])(?=.*[a-z]).{6,20}$/; 
+        var re = /^(?=.*\d)(?=.*[a-z]).{6,100}$/; 
+        return re.test(password);
     }
 }
