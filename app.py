@@ -193,8 +193,8 @@ class UserCreateHandler(BaseHandler):
             raise tornado.web.HTTPError(400,"User existed!")
         else:
             password = yield executor.submit(
-                bcrypt.hashpw, tornado.escape.utf8(self.get_argument("password")),
-                bcrypt.gensalt())
+                bcrypt.hashpw, tornado.escape.utf8(
+                    self.get_argument("password")),bcrypt.gensalt())
 
             user_id = self.db.execute(
                 "INSERT INTO users (`name`,`email`,`password`) "
