@@ -6,6 +6,7 @@ $(document).ready(function(){
         $this = $(this);
         var formData = $this.serialize(); 
         newMessage(formData);
+        $("#message").val("").select();
         return false;
     });
     //post message if user enter "Enter"
@@ -15,6 +16,7 @@ $(document).ready(function(){
             //serializde formdata
             var formData = $this.serialize(); 
             newMessage(formData);
+            $("#message").val("").select();
             return false;
         }
     });
@@ -88,7 +90,7 @@ var updater = {
     showMessage: function(message){
         var $msgDiv = $("<div>",{
             id:message.id,
-            class:"messageItem",
+            class:"messageItem messageRight",
             text:message.body,
         });
         $(".messageBox").append($msgDiv);

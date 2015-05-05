@@ -6,20 +6,27 @@
         <link rel="stylesheet" href="static/css/chat.css" type="text/css"/>
     </head>
     <body>
-        <div class="messageBox">
-            {% for message in messages %}
-                {% module Message(message) %}
-            {% end %}
+        <div class="wrapper">
+            <div class="container">
+        
+                <div class="messageBox">
+                    <ul>
+                        {% for message in messages %}
+                        <li>{% module Message(message) %}</li>
+                        {% end %}
+                    </ul>
+                </div>
+                
+                <form id="messageForm" action="message/new">
+                    <input type="text" name="body" id="message" 
+                        autocomplete="off">
+                    <input type="submit" value="发送">
+                    {% module xsrf_form_html() %}
+                </form>    
+                <script src="static/jquery/dist/jquery.min.js"></script>
+                <script src="static/jquery.cookie/jquery.cookie.js"></script>
+                <script src="static/js/chat.js"></script>
+            </div>
         </div>
-        <div class="container">
-            <form id="messageForm" action="message/new">
-                <input type="text" name="body" id="message">
-                <input type="submit" value="发送">
-                {% module xsrf_form_html() %}
-            </form>    
-        </div>
-        <script src="static/jquery/dist/jquery.min.js"></script>
-        <script src="static/jquery.cookie/jquery.cookie.js"></script>
-        <script src="static/js/chat.js"></script>
     </body>
 </html>

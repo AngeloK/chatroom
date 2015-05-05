@@ -138,8 +138,11 @@ class BaseHandler(RequestHandler):
         return False
 
     def get_password(self,email):
-
-        return self.db.get("SELECT password FROM users where email=%s",email)
+        row = self.db.get("SELECT password FROM users where email=%s",email)
+        if row:
+            return row["password"]
+        else:
+            return
 
 
 
@@ -177,7 +180,7 @@ class UserCreateHandler(BaseHandler):
     def post(self):
         email = self.get_argument("email")
         if self.check_if_exist(email):
-            raise tornado.web.HTTPError(4001,"User existed!")
+            raise tornado.web.HTTPError(400,"User existed!")
         encode_pw = self.get_argument("password").encode("utf-8")
         encode_salt = bcrypt.gensalt().encode("utf-8")
         password = bcrypt.hashpw(encode_pw,encode_salt) 
@@ -202,13 +205,13 @@ class UserAuthenticateHandler(BaseHandler):
             raise tornado.web.HTTPError(400,"authenticate fail")
 
         password = self.get_argument("password").encode("utf-8")
-        hashed_password = self.get_password(email)
+        hashed_password = self.get_password(email).encode("utf-8")
         logging.info("hashed_password:",hashed_password)
         if not hashed_password:
             raise tornado.web.HTTPError(400,"authenticate failed!")
         if bcrypt.hashpw(password,hashed_password) == hashed_password:
-            user_id = self.db.get("SELECT id from users where email=%s",email)
-            self.set_secure_cookie("chat_user",str(user_id))
+            res = self.db.get("SELECT id from users where email=%s",email)
+            self.set_secure_cookie("chat_user",str(res.get("id")))
 
 
 def main():
