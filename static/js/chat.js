@@ -7,6 +7,7 @@ $(document).ready(function(){
         $this = $(this);
         var formData = $this.serialize(); 
         newMessage(formData);
+        $(".messageBox").animate({ scrollTop: $(document).height() }, "slow"); 
         $("#message").val("").select();
         return false;
     });
@@ -17,10 +18,14 @@ $(document).ready(function(){
             //serializde formdata
             var formData = $this.serialize(); 
             newMessage(formData);
+            $(".messageBox").animate({ scrollTop: $(document).height() }, 
+                                     "slow"); 
             $("#message").val("").select();
             return false;
         }
     });
+
+    $(".messageBox").animate({ scrollTop: $(document).height() }, "slow"); 
 
     cookieValue = $.cookie("chat_user");
 
