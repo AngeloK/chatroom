@@ -145,7 +145,10 @@ class BaseHandler(RequestHandler):
         else:
             return
 
-
+    def get_current_user(self):
+        user_id = self.get_secure_cookie("chat_user")
+        if not user_id: return None
+        return self.db.get("SELECT * FROM users WHERE id=%s",int(user_id))
 
 class MessageNewHandler(RequestHandler):
 
@@ -200,16 +203,36 @@ class UserCreateHandler(BaseHandler):
 class UserAuthenticateHandler(BaseHandler):
 
     def get(self):
-        return self.render("login.html")
+        user = self.get_current_user()
+        if user:
+            self.render("index.html")
+            return
+        self.render("login.html")
+        return 
 
     @gen.coroutine
     def post(self):
         email = self.get_argument("email")
 
         if not self.check_if_exist(email):
-            raise tornado.web.HTTPError(400,"authenticate fail")
+            raise tornado.web.HTTPError(400,"authenticate fail,no user founded")
 
-        password = self.get_argument("password")
+        user = self.db.get("SELECT password FROM users WHERE email=%s",
+                email)
+        
+        hashed_password = yield executor.submit(
+            bcrypt.hashpw,tornado.escape.utf8(self.get_argument("password")),
+            tornado.escape.utf8(user.password))
+        
+        if hashed_password == user.password:
+            self.set_secure_cookie("chat_user",str(user.id))
+        else:
+            raise tornado.web.HTTPError(400,"wrong password")
+        
+
+
+
+        password = yield executor.submit(self.get_argument("password"))
         if not hashed_password:
             raise tornado.web.HTTPError(400,"authenticate failed!")
         if bcrypt.hashpw(password,hashed_password) == hashed_password:
