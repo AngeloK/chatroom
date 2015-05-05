@@ -69,14 +69,6 @@ $("input[name=password]").blur(function(){
         $("#passwordHelp").addClass("hidden");
         $("#create-button").disable(false);
     }
-=======
-        if ( response == "redirect"){
-            $form.fadeOut(500);
-            $('.wrapper').addClass('form-success');
-            window.setTimeout(window.location.href="/",500); 
-        }
-    });
->>>>>>> login
 });
 
 jQuery.postForm = function(url,formData){
@@ -86,13 +78,7 @@ jQuery.postForm = function(url,formData){
         dataType:"text",
         data:formData,
         success:function(response){
-<<<<<<< HEAD
             window.location.href="/";
-=======
-            if(callback){
-                callback(response);
-            }
->>>>>>> login
         },
         error:function(error){
             console.log("Error:",error);
