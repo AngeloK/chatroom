@@ -45,6 +45,7 @@ class Application(tornado.web.Application):
             static_path=os.path.join(os.path.dirname(__file__), "static"),
             cookie_secret="__TODO:_GENERATE_YOUR_OWN_RANDOM_VALUE_HERE__",
             ui_modules={"Message": MessageModule},
+            login_url="/login",
             xsrf_cookies=True,
             debug=options.debug
         )
@@ -69,15 +70,11 @@ class Application(tornado.web.Application):
                                   stdin=open('chatroom.sql'))
 
 
-class BaseHandler(RequestHandler):
+class BaseUserHandler(RequestHandler):
 
     @property
     def db(self):
         return self.application.db
-
-    # def get_current_user(self):
-        #user_id = get_secure_cookie("user")
-        # return None if not user_id
 
     def check_if_exist(self, email):
         user = self.db.get("SELECT * FROM users WHERE email= %s", email)
@@ -93,10 +90,10 @@ class BaseHandler(RequestHandler):
             return
 
     def get_current_user(self):
-        user_id = self.get_secure_cookie("chat_user")
-        if not user_id:
+        user_name = self.get_secure_cookie("chat_user")
+        if not user_name:
             return None
-        return self.db.get("SELECT * FROM users WHERE id= %s", int(user_id))
+        return self.db.get("SELECT * FROM users WHERE name= %s", user_name)
 
 
 class MessageBuffer(object):
@@ -148,10 +145,10 @@ class MessageBuffer(object):
 global_message_buffer = MessageBuffer()
 
 
-class MainHandler(BaseHandler):
+class MainHandler(BaseUserHandler):
 
+    @tornado.web.authenticated
     def get(self):
-        print("current user: %s" % self.get_current_user())
         return self.render("index.html", messages=global_message_buffer.cache)
 
 
@@ -160,7 +157,9 @@ class MessageNewHandler(RequestHandler):
     def post(self):
         id_ = str(uuid.uuid4())
         body = self.get_argument("body")
-        message = dict(id=id_, body=body)
+        current_user = self.get_secure_cookie("chat_user")
+        logging.info("current user: %s" % current_user)
+        message = dict(id=id_, body=body, user_name=current_user)
         self.write(message)
         global_message_buffer.new_message([message])
         logging.info("new message created,message: %s" % message)
@@ -185,7 +184,7 @@ class MessageModule(tornado.web.UIModule):
         return self.render_string("message.html", message=message)
 
 
-class UserCreateHandler(BaseHandler):
+class UserCreateHandler(BaseUserHandler):
 
     def get(self):
         if self.get_current_user():
@@ -208,10 +207,10 @@ class UserCreateHandler(BaseHandler):
                 "VALUES (%s,%s,%s)",
                 self.get_argument("name"), self.get_argument("email"),
                 password)
-            self.set_secure_cookie("chat_user", str(user_id))
+            self.set_secure_cookie("chat_user", self.get_argument("name"))
 
 
-class UserAuthenticateHandler(BaseHandler):
+class UserAuthenticateHandler(BaseUserHandler):
 
     def get(self):
         user = self.get_current_user()
@@ -236,12 +235,12 @@ class UserAuthenticateHandler(BaseHandler):
             tornado.escape.utf8(user.password))
 
         if hashed_password == user.password:
-            self.set_secure_cookie("chat_user", str(user.id))
+            self.set_secure_cookie("chat_user", user.name)
         else:
             raise tornado.web.HTTPError(400, "wrong password")
 
 
-class UserLogoutHandler(BaseHandler):
+class UserLogoutHandler(BaseUserHandler):
 
     def get(self):
         if self.get_secure_cookie("chat_user"):

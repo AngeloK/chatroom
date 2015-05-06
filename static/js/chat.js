@@ -94,15 +94,18 @@ var updater = {
     },
 
     showMessage: function(message){
+        var $msgLi = $("<li>");
         var $msgDiv = $("<div>",{
             id:message.id,
-            class:"messageItem messageRight",
-            text:message.body,
+            class:"msgContent",
+            text:message.user_name+": "+message.body
         });
-        $(".messageBox").append($msgDiv);
+        $msgLi.append($msgDiv);
+        $(".messageBox ul").append($msgLi);
     },
 
 }
+
 
 
 
